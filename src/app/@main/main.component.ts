@@ -8,8 +8,8 @@ import {
 } from '@angular/core';
 
 import { MainComponentModel, ThreeModel } from './main.component.model';
-import { MainComponentService } from './main.component.service';
 import { Clock, WebGLRenderer } from 'three';
+import WebGL from 'three/examples/jsm/capabilities/WebGL';
 
 @Component({
   selector: 'app-main',
@@ -17,6 +17,7 @@ import { Clock, WebGLRenderer } from 'three';
 })
 export class MainComponent implements OnInit, OnChanges, OnDestroy {
   private _mainComponentModel: MainComponentModel;
+  private _isWebGLAvailable = true;
 
   mouseDown = false;
   isHelpDisplayed = false;
@@ -27,10 +28,7 @@ export class MainComponent implements OnInit, OnChanges, OnDestroy {
     antialias: true,
   });
 
-  constructor(
-    private _element: ElementRef,
-    private _mainComponentService: MainComponentService
-  ) {
+  constructor(private _element: ElementRef) {
     // Empty
     this._mainComponentModel = {
       threeModel: <ThreeModel>{},
@@ -39,29 +37,17 @@ export class MainComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   public ngOnInit(): void {
-    this._mainComponentModel = this._mainComponentService.initModel(
-      this._element,
-      this.renderer,
-      window.innerWidth,
-      window.innerHeight
-    );
-    this._mainComponentService.resetWidthHeight(
-      this.mainComponentModel,
-      window.innerWidth,
-      window.innerHeight
-    );
-    this._mainComponentService.initComponent(this.mainComponentModel);
-  }
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    this._mainComponentService.onChanges(this.mainComponentModel, changes);
-  }
-
-  public ngOnDestroy(): void {
-    if (this.mainComponentModel.threeModel.frameId != null) {
-      cancelAnimationFrame(this.mainComponentModel.threeModel.frameId);
+    if (!WebGL.isWebGLAvailable()) {
+      this._isWebGLAvailable = false;
+      const warning = WebGL.getWebGLErrorMessage();
+      this._element.nativeElement.appendChild(warning);
+      return;
     }
   }
+
+  public ngOnChanges(changes: SimpleChanges): void {}
+
+  public ngOnDestroy(): void {}
 
   public displayHelp(status: boolean): void {
     this.isHelpDisplayed = status;
@@ -73,5 +59,9 @@ export class MainComponent implements OnInit, OnChanges, OnDestroy {
 
   public set mainComponentModel(model: MainComponentModel) {
     this._mainComponentModel = model;
+  }
+
+  public get isWebGLAvailable(): boolean {
+    return this._isWebGLAvailable;
   }
 }

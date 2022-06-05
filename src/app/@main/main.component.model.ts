@@ -1,6 +1,6 @@
 import { ElementRef } from '@angular/core';
 
-import { TrackballControlsModel } from '../@shared/trackball-controls/trackball-controls.model';
+import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
 import {
   AxesHelper,
@@ -13,6 +13,7 @@ import {
   Vector2,
   WebGLRenderer,
 } from 'three';
+
 export interface MainComponentModel {
   threeModel: ThreeModel;
   threeObjects: ThreeObjects;
@@ -24,7 +25,7 @@ export interface ThreeModel {
   frameId: number;
   scene: Scene;
   camera: PerspectiveCamera;
-  trackballControls: TrackballControlsModel;
+  trackballControls: TrackballControls;
   raycaster: Raycaster;
   mouse: Vector2;
   needsUpdate: boolean;

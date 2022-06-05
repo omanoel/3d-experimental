@@ -1,1 +1,4 @@
-<app-map [model]="mainComponentModel"></app-map>
+<div *ngIf="!isWebGLAvailable; else webglAvailable"></div>
+<ng-template #webglAvailable>
+  <app-three [options]="mainComponentModel"></app-three>
+</ng-template>

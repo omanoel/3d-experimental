@@ -1,6 +1,7 @@
 import { Injectable, SimpleChanges } from '@angular/core';
-import { Vector3, PerspectiveCamera } from 'three';
-import { MainComponentModel } from '../../@main/main.component.model';
+import { PerspectiveCamera, Vector3 } from 'three';
+
+import { ThreeComponentModel } from '../../three-component.model';
 
 @Injectable({
   providedIn: 'root',
@@ -13,55 +14,50 @@ export class PerspectiveCameraService {
   private static readonly DEFAULT_ASPECT = 1;
 
   public previousPositionOfCamera: Vector3 = new Vector3(0, 0, 0);
-  public alreadyChecked = false;
+  public alreadyChecked: boolean = true;
+  public camera: PerspectiveCamera;
 
   constructor() {
     // Empty
-  }
-
-  public initialize(
-    width: number,
-    height: number,
-    coord: number
-  ): PerspectiveCamera {
-    const camera = new PerspectiveCamera(
+    this.camera = new PerspectiveCamera(
       PerspectiveCameraService.VIEW_ANGLE,
       PerspectiveCameraService.DEFAULT_ASPECT,
       PerspectiveCameraService.NEAR,
       PerspectiveCameraService.FAR
     );
-    camera.translateX(coord);
-    camera.translateY(coord);
-    camera.translateZ(coord);
-    camera.up = new Vector3(0, 1, 0);
-    this._updateAspect(camera, width, height);
-    return camera;
   }
 
-  public updateCamera(
-    camera: PerspectiveCamera,
+  public initialize(
     width: number,
-    height: number
+    height: number,
+    positions: number[] = [1, 1, 1]
   ): void {
-    this._updateAspect(camera, width, height);
+    this.camera.translateX(positions[0]);
+    this.camera.translateY(positions[1]);
+    this.camera.translateZ(positions[2]);
+    this.camera.up = new Vector3(0, 0, 1);
+    this._updateAspect(width, height);
   }
 
-  public onChanges(camera: PerspectiveCamera, changes: SimpleChanges): void {
+  public updateCamera(width: number, height: number): void {
+    this._updateAspect(width, height);
+  }
+
+  public onChanges(changes: SimpleChanges): void {
     const widthChng = changes['width'] && changes['width'].currentValue;
     const heightChng = changes['height'] && changes['height'].currentValue;
 
     if (widthChng || heightChng) {
-      this._updateAspect(camera, widthChng, heightChng);
+      this._updateAspect(widthChng, heightChng);
     }
   }
 
-  public isMoving(model: MainComponentModel): boolean {
-    if (model.threeModel.camera) {
+  public isMoving(threeComponentModel: ThreeComponentModel): boolean {
+    if (this.camera) {
       if (
-        this.previousPositionOfCamera.distanceTo(
-          model.threeModel.camera.position
-        ) <
-        PerspectiveCameraService.EPSILON * (model.threeModel.scale > 1 ? 10 : 1)
+        this.previousPositionOfCamera.distanceTo(this.camera.position) <
+        PerspectiveCameraService.EPSILON *
+          (threeComponentModel.mainModel.threeModel.scale > 1 ? 10 : 1)
       ) {
         if (!this.alreadyChecked) {
           this.alreadyChecked = true;
@@ -72,7 +68,7 @@ export class PerspectiveCameraService {
       } else {
         this.alreadyChecked = false;
       }
-      this.previousPositionOfCamera.copy(model.threeModel.camera.position);
+      this.previousPositionOfCamera.copy(this.camera.position);
       return true;
     } else {
       this.alreadyChecked = false;
@@ -80,14 +76,10 @@ export class PerspectiveCameraService {
     }
   }
 
-  private _updateAspect(
-    camera: PerspectiveCamera,
-    width: number,
-    height: number
-  ) {
-    if (camera) {
-      camera.aspect = this._getAspect(width, height);
-      camera.updateProjectionMatrix();
+  private _updateAspect(width: number, height: number) {
+    if (this.camera) {
+      this.camera.aspect = this._getAspect(width, height);
+      this.camera.updateProjectionMatrix();
     }
   }
 
